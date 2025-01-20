@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0px 10px;
+            background: url(https://marketplace.canva.com/EAF3DZwB4GQ/1/0/1131w/canva-pink-and-cream-watercolor-background-document-%28a4%29-pbKa9sEjgiE.jpg) no-repeat center center/cover;
+        }
+
+        .receipt-container {
+            width: 400px;
+            background-color: #ffffff7d;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            margin: auto;
+            position: relative;
+        }
+
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .receipt-header img {
+            width: 150px;
+            margin-bottom: 5px;
+        }
+
+        .receipt-header h1 {
+            margin: 0;
+            font-size: 20px;
+            color: #333;
+        }
+
+        .receipt-details p {
+            margin: 5px 0;
+        }
+
+        .items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .items th,
+        .items td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .total {
+            text-align: right;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        #barcode {
+            display: block;
+            margin: 8px auto 8px auto;
+        }
+
+        .hologram {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            opacity: 0.7;
+        }
+
+        .generate-btn,
+        .print-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .generate-btn:hover,
+        .print-btn:hover {
+            background: #0056b3;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .currency {
+            font-weight: bold;
+        }
+
+        .paid-stamp {
+            position: absolute;
+            width: 200px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-20deg);
+            opacity: 0.8;
+            z-index: 10;
+        }
+
+       
+      @media print {
+            body {
+                background: url(https://i.ibb.co.com/ryFyrhV/clear-whitish-pale-wallpaper.jpg) no-repeat center center/cover !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                margin: 0;
+            }
+
+            .receipt-container {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                width: 400px;
+                height: auto;
+                margin: 0 auto;
+                box-shadow: none;
+                border: none;
+            }
+
+            @page {
+                size: A5 portrait;
+                margin: 6mm 0mm;
+            }
+
+            .generate-btn,
+            .print-btn {
+                display: none;
+            }
+
+            input[type="text"] {
+                border: none;
+                padding: 0;
+                display: inline;
+                width: auto;
+            }
+
+            .paid-stamp {
+                display: block;
+            }
+              
+    </style>
+</head>
+
+<body>
+    <div class="receipt-container">
+        <img id="paid-stamp" class="paid-stamp" src="https://i.ibb.co/FYXmMSB/bd958b0d-764d-4986-846d-63586dce2da5.png"
+            alt="Paid Stamp" style="display: none;">
+        <div class="receipt-header">
+            <img src="https://i.ibb.co/m6M723d/image.png" alt="ISHAS Logo">
+            <h1>ISHAS Fund Collection</h1>
+            <p id="member-id"></p>
+        </div>
+        <div class="receipt-details">
+            <p><strong>Date:</strong> <span id="date"></span></p>
+            <p><strong>Time:</strong> <span id="time"></span></p>
+            <p><strong>Phone Number:</strong> <span id="phone-number"></span></p>
+            <p><strong>Collector:</strong> Lorem Ipsum</p>
+            <p><strong>Member Name:</strong> <span id="member-name"></span></p>
+            <p><strong>Position:</strong> <span id="member-position"></span></p>
+            <p><strong>Payment Method:</strong> <span id="payment-method"></span></p>
+        </div>
+        <table class="items">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Amount (BDT)</th>
+                </tr>
+            </thead>
+            <tbody id="items-list">
+                <tr>
+                    <td>Donation</td>
+                    <td><input type="text" id="amount" value="1000.00"></td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="total">Total: <span class="currency">BDT</span> <span id="total">1000.00</span></p>
+        <canvas id="barcode"></canvas>
+       
+        <button class="generate-btn" onclick="generateReceipt()">Generate Receipt</button>
+        <button class="print-btn" id="print-btn" disabled onclick="window.print()">Print Receipt</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        function formatAMPM(date) {
+            let hours = date.getHours();
+            const minutes = date.getMinutes();
+            const seconds = date.getSeconds();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
+        }
+
+        function generateReceipt() {
+            const memberId = prompt("Enter Member ID:");
+            const memberName = prompt("Enter Member Name:");
+            const memberPosition = prompt("Enter Member Position:");
+            const phoneNumber = prompt("Enter Phone Number:");
+            const paymentMethod = prompt("Enter Payment Method (e.g., Cash, Card, Mobile Payment):");
+
+            if (!memberId || !memberName || !memberPosition || !phoneNumber || !paymentMethod) {
+                alert("All fields (Member ID, Name, Position, Phone Number, Payment Method) are required!");
+                return;
+            }
+
+            const now = new Date();
+            document.getElementById("date").innerText = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1)
+                .toString()
+                .padStart(2, '0')}/${now.getFullYear()}`;
+            document.getElementById("time").innerText = formatAMPM(now);
+            document.getElementById("member-id").innerText = `Member ID: ${memberId}`;
+            document.getElementById("member-name").innerText = memberName;
+            document.getElementById("member-position").innerText = memberPosition;
+            document.getElementById("phone-number").innerText = phoneNumber;
+            document.getElementById("payment-method").innerText = paymentMethod;
+
+            const amount = document.getElementById("amount").value;
+            document.getElementById("total").innerText = amount;
+
+            JsBarcode(document.getElementById("barcode"), memberId, {
+                format: "CODE128",
+                displayValue: true,
+                fontSize: 14,
+                width: 3,
+                height: 50,
+            });
+
+            document.getElementById("print-btn").disabled = false;
+
+            const paidStamp = document.getElementById("paid-stamp");
+            const container = document.querySelector(".receipt-container");
+            const randomTop = Math.random() * (container.offsetHeight - 150);
+            const randomLeft = Math.random() * (container.offsetWidth - 150);
+
+            paidStamp.style.top = `${randomTop}px`;
+            paidStamp.style.left = `${randomLeft}px`;
+            paidStamp.style.display = "block";
+        }
+    </script>
+</body>
+
+</html>
