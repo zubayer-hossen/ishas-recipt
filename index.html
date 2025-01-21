@@ -8,14 +8,17 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+            margin: 0 10px;
+            background: #f79d00;
+            /* fallback for old browsers */
+            background: -webkit-linear-gradient(to right, #64f38c, #f79d00);
+            /* Chrome 10-25, Safari 5.1-6 */
             background: linear-gradient(to right, #64f38c, #f79d00);
+            /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
         }
 
         .receipt-container {
-            max-width: 90%;
-            width: 400px;
+            max-width: 400px;
             background-color: rgba(255, 255, 255, 0.8);
             padding: 20px;
             border: 1px solid #ccc;
@@ -31,19 +34,18 @@
         }
 
         .receipt-header img {
-            max-width: 100%;
-            height: auto;
+            width: 150px;
+            margin-bottom: 5px;
         }
 
         .receipt-header h1 {
             margin: 0;
-            font-size: 1.2rem;
+            font-size: 20px;
             color: #333;
         }
 
         .receipt-details p {
             margin: 5px 0;
-            font-size: 0.9rem;
         }
 
         .items {
@@ -57,14 +59,12 @@
             text-align: left;
             padding: 8px;
             border-bottom: 1px solid #ccc;
-            font-size: 0.9rem;
         }
 
         .total {
             text-align: right;
             margin-top: 10px;
             font-weight: bold;
-            font-size: 1rem;
         }
 
         #barcode {
@@ -89,7 +89,7 @@
             background: #007bff;
             color: white;
             border-radius: 5px;
-            font-size: 1rem;
+            font-size: 16px;
             cursor: pointer;
             margin-top: 10px;
             transition: background 0.3s ease;
@@ -106,7 +106,6 @@
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
-            font-size: 0.9rem;
         }
 
         .currency {
@@ -115,7 +114,7 @@
 
         .paid-stamp {
             position: absolute;
-            width: 150px;
+            width: 200px;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-20deg);
@@ -132,11 +131,13 @@
             }
 
             .receipt-container {
-                width: 100%;
+                max-width: 100%;
+                width: 400px;
                 height: auto;
                 margin: 0 auto;
                 box-shadow: none;
                 border: none;
+                page-break-inside: avoid;
             }
 
             @page {
@@ -158,33 +159,6 @@
 
             .paid-stamp {
                 display: block;
-            }
-        }
-
-        @media screen and (max-width: 768px) {
-            .receipt-container {
-                max-width: 95%;
-                padding: 15px;
-            }
-
-            .receipt-header h1 {
-                font-size: 1rem;
-            }
-
-            .receipt-details p {
-                font-size: 0.8rem;
-            }
-
-            .items th,
-            .items td {
-                font-size: 0.8rem;
-                padding: 6px;
-            }
-
-            .generate-btn,
-            .print-btn {
-                font-size: 0.9rem;
-                padding: 8px;
             }
         }
     </style>
@@ -240,12 +214,12 @@
         }
 
         function isValidBangladeshiPhoneNumber(phoneNumber) {
-            const regex = /^(?:\+8801|01)\d{9}$/;
+            const regex = /^(?:\+8801|01)\d{9}$/; // Matches +8801xxxxxxxxx or 01xxxxxxxxx
             return regex.test(phoneNumber);
         }
 
         function isValidAmount(amount) {
-            return !isNaN(amount) && Number(amount) > 0;
+            return !isNaN(amount) && Number(amount) > 0; // Amount must be a positive number
         }
 
         function generateReceipt() {
@@ -257,21 +231,23 @@
             const paymentMethod = prompt("Enter Payment Method (e.g., Cash, Card, Mobile Payment):").trim();
             const amount = document.getElementById("amount").value.trim();
 
+            // Validation
             if (!memberId || !memberName || !memberPosition || !phoneNumber || !collector || !paymentMethod) {
                 alert("All fields are required!");
                 return;
             }
 
             if (!isValidBangladeshiPhoneNumber(phoneNumber)) {
-                alert("Invalid Bangladeshi phone number! Use +8801XXXXXXXXX or 01XXXXXXXXX format.");
+                alert("Invalid Bangladeshi phone number! Please use +8801XXXXXXXXX or 01XXXXXXXXX format.");
                 return;
             }
 
             if (!isValidAmount(amount)) {
-                alert("Invalid amount! Enter a valid number greater than 0.");
+                alert("Invalid amount! Please enter a valid number greater than 0.");
                 return;
             }
 
+            // If all validations pass, populate the receipt
             const now = new Date();
             document.getElementById("date").innerText = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
             document.getElementById("time").innerText = formatAMPM(now);
